@@ -6,7 +6,7 @@ const CloudinaryUpload = ({setUrl, setName}) => {
         let myUploadWidget = openUploadWidget(
             {
                 cloudName: "dvhvalbei",
-                uploadPreset: process.env.REACT_APP_CLOUD_PRE,
+                uploadPreset: "song_upload_qwer",
                 sources: ["local"],
             },
             function (error, result) {
