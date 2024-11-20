@@ -10,9 +10,21 @@ import SignupComponent from "./routes/signup";
 import HomeComponent from "./routes/home";
 import LoginHomeComponent from "./routes/loginhome";
 import UploadSong from "./routes/uploadsong";
+import MyMusic from "./routes/mymusic";
+import songContexts from "./contexts/songContexts";
+import SearchPage from "./routes/searchPage";
 import { useCookies } from "react-cookie";
 
+import { useState } from "react";
+
+
+
 function App() {
+
+  const [currentSong,setCurrentSong]=useState(null);
+  const [soundPlayed,setSoundPlayed]=useState(null);
+    const [isPaused,setIsPaused]=useState(true);
+
   const [cookie,setCookie]=useCookies(["token"]);
 
 
@@ -21,15 +33,17 @@ function App() {
       <BrowserRouter>
       { cookie.token ?
       // login 
-      (<Routes>
-          
-        
+      (
+          <songContexts.Provider value={{currentSong,setCurrentSong,soundPlayed,setSoundPlayed,isPaused,setIsPaused}}>
+        <Routes>
           <Route path="/home" element={<LoginHomeComponent/>}/>
-          <Route path="/uploadSong" element={<UploadSong/>}/>
+          <Route path="/uploadSong" element={<UploadSong />} />
+          <Route path="/myMusic" element={<MyMusic/>}/>
+          <Route path="/search" element={<SearchPage/>}/>
           <Route path="*" element={<Navigate to="/home"/>}/>
-
-      
-      </Routes>):
+          </Routes>
+      </songContexts.Provider>
+      ):
       // logged out 
       (<Routes>
           
