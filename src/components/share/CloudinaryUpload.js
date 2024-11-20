@@ -1,11 +1,12 @@
-import {cloud_pre} from "../../config";
+
+
 import {openUploadWidget} from "../../utils/CloudinaryService";
 const CloudinaryUpload = ({setUrl, setName}) => {
     const uploadImageWidget = () => {
         let myUploadWidget = openUploadWidget(
             {
                 cloudName: "dvhvalbei",
-                uploadPreset: cloud_pre,
+                uploadPreset: process.env.REACT_APP_CLOUD_PRE,
                 sources: ["local"],
             },
             function (error, result) {
