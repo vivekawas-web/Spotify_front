@@ -53,11 +53,27 @@ const Logincontain = ({ children, curActiveScreen }) => {
     if (soundPlayed) {
       soundPlayed.stop();
     }
-    let sound = new Howl({ src: [songSrc], html5: true });
+  
+    // Create a new Howl instance with the onend event to repeat the song
+    const sound = new Howl({
+      src: [songSrc],
+      html5: true,
+      volume,
+      onend: () => {
+        // Delay replaying the song by 2 seconds
+        setTimeout(() => {
+          sound.play();
+        }, 2000);
+      },
+    });
+  
     setSoundPlayed(sound);
     sound.play();
     setIsPaused(false);
   };
+  
+
+  
 
   const pauseSound = () => {
     soundPlayed.pause();
