@@ -7,6 +7,8 @@ const songContext = createContext({
     setSoundPlayed: () => {},
     isPaused: null,
     setIsPaused: () => {},
+    volume: 50, // Default initial value for volume
+  setVolume: () => {}, // Function to update volume
 });
 
 export default songContext;

@@ -24,10 +24,9 @@ const Logincontain = ({ children, curActiveScreen }) => {
   
 
   const navigate = useNavigate();
-  const { currentSong, setCurrentSong, soundPlayed, setSoundPlayed, isPaused, setIsPaused } = useContext(songContext);
+  const { currentSong, setCurrentSong, soundPlayed, setSoundPlayed, isPaused, setIsPaused,volume, setVolume } = useContext(songContext);
   const firstUpdate = useRef(true);
 
-  const [volume, setVolume] = useState(1);
 
   useLayoutEffect(() => {
     if (firstUpdate.current) {
@@ -60,10 +59,10 @@ const Logincontain = ({ children, curActiveScreen }) => {
       html5: true,
       volume,
       onend: () => {
-        // Delay replaying the song by 2 seconds
+        // Delay replaying the song by 1 seconds
         setTimeout(() => {
           sound.play();
-        }, 2000);
+        }, 1000);
       },
     });
   

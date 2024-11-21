@@ -24,6 +24,7 @@ function App() {
   const [currentSong,setCurrentSong]=useState(null);
   const [soundPlayed,setSoundPlayed]=useState(null);
     const [isPaused,setIsPaused]=useState(true);
+    const [volume, setVolume] = useState(0.5);
 
   const [cookie,setCookie]=useCookies(["token"]);
 
@@ -34,7 +35,7 @@ function App() {
       { cookie.token ?
       // login 
       (
-          <songContexts.Provider value={{currentSong,setCurrentSong,soundPlayed,setSoundPlayed,isPaused,setIsPaused}}>
+          <songContexts.Provider value={{currentSong,setCurrentSong,soundPlayed,setSoundPlayed,isPaused,setIsPaused,volume,setVolume}}>
         <Routes>
           <Route path="/home" element={<LoginHomeComponent/>}/>
           <Route path="/uploadSong" element={<UploadSong />} />
