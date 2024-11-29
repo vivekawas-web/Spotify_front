@@ -24,7 +24,7 @@ function App() {
   const [currentSong,setCurrentSong]=useState(null);
   const [soundPlayed,setSoundPlayed]=useState(null);
     const [isPaused,setIsPaused]=useState(true);
-    const [volume, setVolume] = useState(0.5);
+    const [volume, setVolume] = useState(0.15);
 
   const [cookie,setCookie]=useCookies(["token"]);
 

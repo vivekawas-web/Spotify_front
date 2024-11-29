@@ -11,7 +11,14 @@ import CreatePlaylistModal from "../models/CreatePlaylistModal";
 
 import AddToPlaylistModal from "../models/add_playlist";
 
-
+const filters = [
+  { type: 'lowshelf', frequency: 60, gain: 5 },    // Boost bass
+  { type: 'peaking', frequency: 150, gain: 4 },    // Slight boost at 150 Hz
+  { type: 'peaking', frequency: 400, gain: 1 },    // Neutral at 400 Hz
+  { type: 'peaking', frequency: 1000, gain: -10 }, // Cut at 1 kHz
+  { type: 'peaking', frequency: 2400, gain: 3 },  // Slight cut at 2.4 kHz
+  { type: 'highshelf', frequency: 15000, gain: 4 }, // Boost treble
+];
 
 const Logincontain = ({ children, curActiveScreen }) => {
 
@@ -43,54 +50,108 @@ const Logincontain = ({ children, curActiveScreen }) => {
     }
   }, [volume, soundPlayed]);
 
-  const playSound = () => {
-    if (!soundPlayed) return;
-    soundPlayed.play();
-  };
+
+  let filtersApplied = false;
+
+  const setupFilters = (sound) => {
+    if (filtersApplied) return;  // Skip applying filters if they have already been applied
+
+    const ctx = Howler.ctx; // Access the Web Audio API context
+    const soundSource = sound._sounds[0]._node; // Retrieve the audio node
+
+    if (!soundSource) {
+        console.error("Sound source node is not initialized");
+        return;
+    }
+
+    // Create a gain node (for volume adjustment) as the starting point of the audio graph
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = volume; // Use the initial volume directly here
+
+    // Connect the source to the gain node
+    soundSource.connect(gainNode);
+
+    // Set up the equalizer filters
+    const equalizerFilters = filters.map(({ type, frequency, gain }) => {
+        const filter = ctx.createBiquadFilter();
+        filter.type = type;
+        filter.frequency.value = frequency;
+        filter.gain.value = gain;
+        return filter;
+    });
+
+    // Chain filters: gainNode -> filters -> destination
+    let prevNode = gainNode;
+    equalizerFilters.forEach((filter) => {
+        prevNode.connect(filter);
+        prevNode = filter;
+    });
+
+    // Connect the final filter node to the Web Audio API destination (output)
+    prevNode.connect(ctx.destination);
+
+    filtersApplied = true;  // Mark filters as applied
+};
+  
 
   const changeSong = (songSrc) => {
     if (soundPlayed) {
-      soundPlayed.stop();
+        soundPlayed.stop(); // Stop the currently playing sound before playing the new one
     }
-  
-    // Create a new Howl instance with the onend event to repeat the song
+
+    // Create a new Howl instance and only apply volume during initialization
     const sound = new Howl({
-      src: [songSrc],
-      html5: true,
-      volume,
-      onend: () => {
-        // Delay replaying the song by 1 seconds
-        setTimeout(() => {
-          sound.play();
-        }, 1000);
-      },
+        src: [songSrc],
+        volume: volume,  // Set volume only during initialization
+        onplay: () => {
+            setupFilters(sound); // Set up the filters once the song starts playing
+        },
+        onend: () => {
+            setTimeout(() => sound.play(), 1000);  // Replay the song after it finishes
+        },
     });
-  
-    setSoundPlayed(sound);
-    sound.play();
-    setIsPaused(false);
-  };
-  
+
+    setSoundPlayed(sound);  // Save the Howl instance to state
+    sound.play();  // Play the sound immediately after initialization
+    setIsPaused(false);  // Ensure it's not paused
+};
 
   
 
-  const pauseSound = () => {
-    soundPlayed.pause();
-  };
+  
 
   const togglePlayPause = () => {
-    if (isPaused) {
-      playSound();
-      setIsPaused(false);
-    } else {
-      pauseSound();
-      setIsPaused(true);
-    }
-  };
+    if (!soundPlayed) return;
 
-  const handleVolumeChange = (event) => {
-    setVolume(event.target.value); // Update volume state
-  };
+    if (isPaused) {
+        playSound();  // Play the sound only when it's paused
+        setIsPaused(false);
+    } else {
+        pauseSound();  // Pause the sound
+        setIsPaused(true);
+    }
+};
+
+const playSound = () => {
+    if (soundPlayed) {
+        soundPlayed.play();  // Simply play the sound without modifying the volume
+    }
+};
+
+const pauseSound = () => {
+    if (soundPlayed) {
+        soundPlayed.pause();  // Pause without changing volume
+    }
+};
+
+const handleVolumeChange = (event) => {
+  const newVolume = Math.min(Math.max(event.target.value, 0), 0.4);  // Clamp volume between 0 and 0.4
+  setVolume(newVolume);  // Update global volume state
+  if (soundPlayed) {
+      soundPlayed.volume(newVolume);  // Apply volume change directly to Howl instance
+  }
+};
+
 
   return (
     <div className="h-full w-full bg-app-black">
@@ -174,7 +235,7 @@ const Logincontain = ({ children, curActiveScreen }) => {
             <img src={currentSong.thumbnail} className="h-14 w-14 rounded" />
             <div className="pl-4">
               <div className="text-sm hover:underline cursor-pointer ">{currentSong.name}</div>
-              <div className="text-sx text-gray-400 hover:underline cursor-pointer">{currentSong.artist.firstName + " " + currentSong.artist.lastName}</div>
+              <div className="text-sx text-gray-400 hover:underline cursor-pointer">{"Uploaded by "+currentSong.artist.firstName + " " + currentSong.artist.lastName}</div>
             </div>
           </div>
           <div className="w-1/2 flex justify-center h-full flex-col items-center">
@@ -206,7 +267,7 @@ const Logincontain = ({ children, curActiveScreen }) => {
               <input
                 type="range"
                 min="0"
-                max="1"
+                max=".4"
                 step="0.01"
                 value={volume}
                 onChange={handleVolumeChange}
